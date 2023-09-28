@@ -145,7 +145,7 @@ paths:
                 $ref: '#/components/schemas/MovieItem'
         "400":
           description: bad input parameter
-  /titles:
+  /titles/{title}:
     get:
       tags:
       - developers
