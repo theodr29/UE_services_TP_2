@@ -8,8 +8,8 @@ import time
 # CALLING gRPC requests
 import grpc
 from concurrent import futures
-
-from movie.resolvers import all_movies
+import booking_pb2
+import booking_pb2_grpc
 
 """
 import booking_pb2
@@ -50,10 +50,16 @@ def get_user_by_id(userid):
 
 @app.route("/users/<userid>/movies", methods=["GET"])
 def get_user_movies_by_id(userid):
-    req_bookings = requests.get(f"http://booking:3201/bookings/{userid}")
-    bookings = req_bookings.json()
-    if req_bookings.status_code == 400:
-        return make_response(jsonify(bookings), 400)
+    booking_port = 3003
+    with grpc.insecure_channel(f'showtime:{booking_port}') as channel:
+        stub = booking_pb2_grpc.BookingsStub(channel)
+        bookings = stub.GetBookingsByUser(userid)
+    print(bookings)
+    movies = bookings.json()["movies"]
+    
+
+    # if req_bookings.status_code == 400:
+    #     return make_response(jsonify(bookings), 400)
 
     movies = []
     for date in bookings["dates"]:

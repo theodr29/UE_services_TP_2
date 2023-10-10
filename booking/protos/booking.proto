@@ -1,13 +1,13 @@
 syntax="proto3";
 
 service Bookings {
-    rpc GetBookings(Empty) returns (stream Booking) {}
+    rpc GetBookings(EmptyBooking) returns (stream Booking) {}
     rpc GetBookingsByUser(Id) returns (Booking) {}
     rpc PostNewBooking(PostBooking) returns (Booking) {}
     rpc PostNewBookingUser(Id) returns (Booking) {}
 }
 
-message Empty {
+message EmptyBooking {
 
 }
 

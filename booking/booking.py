@@ -14,7 +14,7 @@ def get_showtimes_by_date(stub, date):
 class BookingServicer(booking_pb2_grpc.BookingsServicer):
     def __init__(self):
         with open("{}/data/bookings.json".format("."), "r") as jsf:
-            self.db = json.load(jsf)["schedule"]
+            self.db = json.load(jsf)["bookings"]
 
     def GetBookings(self, request, context):
         for booking in self.db:
@@ -83,16 +83,19 @@ class BookingServicer(booking_pb2_grpc.BookingsServicer):
             if booking['userid'] == request.id:
                 return booking_pb2.Booking(
                 userid="", dates=[booking_pb2.Date(date="", movies=[])]
-                ) 
+                )
         
-        self.db.append({})
+        self.db.append({"userid": request.id, "dates": []})
+        return booking_pb2.Booking(
+            userid=request.id, dates=[booking_pb2.Date(date="", movies=[])]
+        )
         
 
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     booking_pb2_grpc.add_BookingsServicer_to_server(BookingServicer(), server)
-    server.add_insecure_port("[::]:3002")
+    server.add_insecure_port("[::]:3003")
     server.start()
     server.wait_for_termination()
 
