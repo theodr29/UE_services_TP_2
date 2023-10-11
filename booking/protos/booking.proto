@@ -1,30 +1,42 @@
 syntax="proto3";
 
 service Bookings {
+    // Returns all bookings
     rpc GetBookings(EmptyBooking) returns (stream Booking) {}
+
+    // Returns all bookings for a specific user
     rpc GetBookingsByUser(Id) returns (Booking) {}
+
+    // Adds a new booking
     rpc PostNewBooking(PostBooking) returns (Booking) {}
+
+    // Adds a new user to the booking database
     rpc PostNewBookingUser(Id) returns (Booking) {}
 }
 
+// Empty message
 message EmptyBooking {
 
 }
 
+// Id message containing a string id
 message Id {
     string id = 1;
 }
 
+// Booking message containing a user id and a list of Dates named dates
 message Booking {
     string userid = 1;
     repeated Dates dates = 2;
 }
 
+// Dates message containing a string date and a list of movie ids (string) named movies
 message Dates {
     string date = 1;
     repeated string movies = 2;
 }
 
+// PostBooking message containing a user id, a date and a movie id
 message PostBooking {
     string userid = 1;
     string date = 2;

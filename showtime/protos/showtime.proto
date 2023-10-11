@@ -1,16 +1,23 @@
 syntax= "proto3";
 
-service Showtimes {
+// ShowTimes service
+service Showtimes { 
+    // GetShowTimes returns all showtimes for all dates
     rpc GetShowTimes(Empty) returns (stream ShowTime) {}
+
+    // GetShowTimeByDate returns all showtimes for a given date
     rpc GetShowTimeByDate(Date) returns (ShowTime) {}
 }
 
+// Empty message
 message Empty {}
 
+// Date message contains a date string
 message Date {
     string date = 1;
 }
 
+// ShowTime message contains a date string and a list of movies (strings)
 message ShowTime {
     string date = 1;
     repeated string movies = 2;
