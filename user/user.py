@@ -19,6 +19,9 @@ import movie_pb2_grpc
 """
 
 # CALLING GraphQL requests
+
+
+
 # todo to complete
 
 app = Flask(__name__)
@@ -51,33 +54,27 @@ def get_user_by_id(userid):
 @app.route("/users/<userid>/movies", methods=["GET"])
 def get_user_movies_by_id(userid):
     booking_port = 3003
-    with grpc.insecure_channel(f'showtime:{booking_port}') as channel:
+    with grpc.insecure_channel(f'booking:{booking_port}') as channel:
         stub = booking_pb2_grpc.BookingsStub(channel)
-        bookings = stub.GetBookingsByUser(userid)
-    print(bookings)
-    movies = bookings.json()["movies"]
-    
+        bookings = stub.GetBookingsByUser(booking_pb2.Id(id=userid))
+    channel.close()
 
     # if req_bookings.status_code == 400:
     #     return make_response(jsonify(bookings), 400)
 
     movies = []
-    for date in bookings["dates"]:
-        for movie in date["movies"]:
-            req_movie = requests.post(
-                "http://movie:3001/graphql",
-                json={'query': """
-                      query {
-                        all_movies {
-                            id
-                            title 
-                            rating
-                            director
-                        }
-                      }"""}
-                )
+    for date in bookings.dates:
+        for movie in date.movies:
+            req_movie = requests.post("http://movie:3001/graphql", json={'query': """query {
+    movie_with_id(_id:\"""" + movie + """\") {
+        id
+        title 
+        rating
+        director
+    }
+}"""})
             if req_movie.status_code == 200:
-                movies.append(req_movie.json()['data']['all_movies'])
+                movies.append(req_movie.json()['data']['movie_with_id'])
     return make_response(jsonify(movies), 200)
 
 
@@ -94,8 +91,11 @@ def add_user(userid):
     users.append(request.json)
 
     # Before rendering the response, we need to update the database of bookings
-    booking_port = 3201
-    requests.post(f"http://booking:{booking_port}/bookings/users/{userid}")
+    booking_port = 3003
+    with grpc.insecure_channel(f'booking:{booking_port}') as channel:
+        stub = booking_pb2_grpc.BookingsStub(channel)
+        stub.PostNewBookingUser(booking_pb2.Id(id=userid))
+    channel.close()
 
     return make_response(jsonify(request.json), 200)
 

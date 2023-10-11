@@ -43,7 +43,7 @@ class BookingServicer(booking_pb2_grpc.BookingsServicer):
                     ],
                 )
         return booking_pb2.Booking(
-            userid="", dates=[booking_pb2.Date(date="", movies=[])]
+            userid="", dates=[booking_pb2.Dates(date="", movies=[])]
         )
 
     def PostNewBooking(self, request, context):
@@ -53,41 +53,42 @@ class BookingServicer(booking_pb2_grpc.BookingsServicer):
                 showtime_port = 3002
                 with grpc.insecure_channel(f'showtime:{showtime_port}') as channel:
                     stub = showtime_pb2_grpc.ShowtimesStub(channel)
-                    showtimes = get_showtimes_by_date(stub, request.date)
-                print(showtimes)
-                movies = showtimes.json()["movies"]
+                    showtimes = get_showtimes_by_date(stub, date=showtime_pb2.Date(date=request.date))
+                channel.close()
+                movies = showtimes.movies
+                if request.movieid in movies:
 
-                for date in booking.dates:
-                    dateFound = False
-                    if date["date"] == request.date :
-                        dateFound = True
-                        if request.movieid in date["movies"]:
-                            return booking_pb2.Booking(
-                            userid="", dates=[booking_pb2.Date(date="", movies=[])]
-                            )
-                        else:
-                            date["movies"].append(request.movieid)
-                            return booking_pb2.Booking(userid=request.userid, dates=request.dates)
-                if dateFound == False:
-                    booking["dates"].append({date:request.date, movies:[request.movieid]})
-                    return booking_pb2.Booking(
-                    userid="", dates=[booking_pb2.Date(date="", movies=[])]
-                    )
+                    for date in booking["dates"]:
+                        dateFound = False
+                        if date["date"] == request.date :
+                            dateFound = True
+                            if request.movieid in date["movies"]:
+                                return booking_pb2.Booking(
+                                userid="", dates=[booking_pb2.Dates(date="", movies=[])]
+                                )
+                            else:
+                                date["movies"].append(request.movieid)
+                                return booking_pb2.Booking(userid=booking["userid"], dates=[booking_pb2.Dates(date=date["date"], movies=date["movies"])])
+                    if dateFound == False:
+                        booking["dates"].append({"date":request.date, "movies":[request.movieid]})
+                        return booking_pb2.Booking(
+                        userid=request.userid, dates=[booking_pb2.Dates(date=request.date, movies=[request.movieid])]
+                        )
 
         return booking_pb2.Booking(
-        userid="", dates=[booking_pb2.Date(date="", movies=[])]
+        userid="", dates=[booking_pb2.Dates(date="", movies=[])]
         )
     
     def PostNewBookingUser(self, request, context):
         for booking in self.db:
             if booking['userid'] == request.id:
                 return booking_pb2.Booking(
-                userid="", dates=[booking_pb2.Date(date="", movies=[])]
+                userid="", dates=[booking_pb2.Dates(date="", movies=[])]
                 )
         
         self.db.append({"userid": request.id, "dates": []})
         return booking_pb2.Booking(
-            userid=request.id, dates=[booking_pb2.Date(date="", movies=[])]
+            userid=request.id, dates=[booking_pb2.Dates(date="", movies=[])]
         )
         
 
