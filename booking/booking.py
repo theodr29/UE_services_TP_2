@@ -73,6 +73,7 @@ class BookingServicer(booking_pb2_grpc.BookingsServicer):
                 # Now we check if the given movie is aired on the given date
                 if request.movieid in movies:
                     # Now we check if the user has already booked the movie
+                    dateFound = False
                     for date in booking["dates"]:
                         dateFound = False
                         # We check if the user already has a booking for the given date
